@@ -1,3 +1,15 @@
+# Repository Introduction #
+
+This is the repository which uses OAI as the base platform to explore bit-flipping attack in 5G. The current version is 2024.w43. All other branches follows this version unless specifically mentioned.
+
+Laptop used (RFSimulator):
+- Hardware Model: Alienware Alienware Area-51m R2
+- RAM: 32GB
+- CPU: Intel® Core™ i9-10900K CPU @ 3.70GHz × 10
+- OS: Ubuntu 22.04.5 LTS 64-bit
+
+# ReadMe from OAI Official Repository #
+
 <h1 align="center">
     <a href="https://openairinterface.org/"><img src="https://openairinterface.org/wp-content/uploads/2015/06/cropped-oai_final_logo.png" alt="OAI" width="550"></a>
 </h1>
