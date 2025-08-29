@@ -115,6 +115,9 @@ void prp_invert_permute_bits(const unsigned char *input, uint8_t *output, size_t
     free(inv_perm);
 }
 
+/* Enable or Disable Shuffling here: '0' means disable, '1' means enable */
+static int shuffle_enable = 1; 
+
 /**
  * @brief returns the maximum PDCP PDU size
  *        which corresponds to data PDU for DRBs with 18 bits PDCP SN
@@ -219,94 +222,131 @@ static void nr_pdcp_entity_recv_pdu(nr_pdcp_entity_t *entity,
 
   if (entity->has_ciphering) {
 
-    //JOON: this is the shuffled ciphertext
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(Receiver side before deciphering) %s():\n", __func__);
-      for (int i = 0; i < size - header_size - sdap_header_size; ++i) {
-        LOG_W(PDCP, "%02x ", buffer[header_size + sdap_header_size + i]);
-      }
-      LOG_W(PDCP, "\n");
-    }  
+    /* DeShuffling is added here: Start */    
 
-    //checksum starts from 26th byte, payload extends to the end
-    // not sure why data length extends 3 more bytes in this function
-    uint8_t data_length = size + integrity_size - sdap_header_size - 26 - 3;
+    if (shuffle_enable == 0){
 
-    LOG_W(PDCP, "(Recv) data_length: %d, size: %d, integrity_size: %d, sdap_header_size: %d\n\n", data_length, size, integrity_size, sdap_header_size);
+      // Ciphertext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Receiver side before deciphering) %s():\n", __func__);
+        for (int i = 0; i < size - header_size - sdap_header_size; ++i) {
+          LOG_W(PDCP, "%02x ", buffer[header_size + sdap_header_size + i]);
+        }
+        LOG_W(PDCP, "\n");
+      }  
 
-    //copy the checksum and payload part of the shuffled ciphertext
-    unsigned char *shuffled_ctx_data = malloc(sizeof(char) * data_length); 
-    memcpy(shuffled_ctx_data, &buffer[header_size + sdap_header_size + 26], data_length);
-
-    entity->cipher(entity->security_context,
-                   buffer + header_size + sdap_header_size,
-                   size - (header_size + sdap_header_size),
-                   entity->rb_id, rcvd_count, entity->is_gnb ? 0 : 1);
-
-
-    //JOON: this is the shuffled plaintext
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(Receiver side after deciphering) %s():\n", __func__);
-      for (int i = 0; i < size - header_size - sdap_header_size; ++i) {
-        LOG_W(PDCP, "%02x ", buffer[header_size + sdap_header_size + i]);
-      }
-      LOG_W(PDCP, "\n");
-
-
-      //copy the checksum and payload part of the shuffled plaintext
-      unsigned char *shuffled_ptx_data = malloc(sizeof(char) * data_length);
-      memcpy(shuffled_ptx_data, &buffer[header_size + sdap_header_size + 26], data_length);
-
-      //extract the keystream by XORing shuffled ptx and ctx (might not work??)
-      unsigned char *keystream = malloc(sizeof(char) * data_length);
-      for (int i = 0; i < data_length; i++) {
-        keystream[i] = shuffled_ptx_data[i] ^ shuffled_ctx_data[i];
-      }
-    
-      LOG_W(PDCP, "(data part of keystream) %s():\n", __func__);
-      for (int k = 0; k < data_length; ++k) {
-        LOG_W(PDCP, "%02x ", keystream[k]);
-      }
-      LOG_W(PDCP, "\n");
-
-
-      //unshuffle ctx based on the keystream
-      unsigned char *temp = malloc(sizeof(char) * data_length);
-      prp_invert_permute_bits(shuffled_ctx_data, temp, data_length * 8, keystream, data_length);
-
-      LOG_W(PDCP, "(temp) %s():\n", __func__);
-      for (int k = 0; k < data_length; ++k) {
-        LOG_W(PDCP, "%02x ", temp[k]);
-      }
-      LOG_W(PDCP, "\n");
-
-      //reinitialize buffer with the unshuffled ciphertext 
-      memcpy(&buffer[header_size + sdap_header_size + 26], temp, data_length);
-
-      LOG_W(PDCP, "(Receiver side after inverse permutation) %s():\n", __func__);
-      for (int k = 0; k < size + integrity_size - sdap_header_size - 3; ++k) {
-        LOG_W(PDCP, "%02x ", ((unsigned char *)buffer)[header_size + sdap_header_size + k]);
-      }
-      LOG_W(PDCP, "\n");
-
-      //copy the deciphered header
-      unsigned char *deciphered_header = malloc(sizeof(char) * 26); 
-      memcpy(deciphered_header, &buffer[header_size + sdap_header_size], 26);
-
-      //decipher the true ctx
+      // Deciphering
       entity->cipher(entity->security_context,
                     buffer + header_size + sdap_header_size,
                     size - (header_size + sdap_header_size),
                     entity->rb_id, rcvd_count, entity->is_gnb ? 0 : 1);
 
-      memcpy(&buffer[header_size + sdap_header_size], deciphered_header, 26);
-
-      LOG_W(PDCP, "(Receiver side after inverse ciphering) %s():\n", __func__);
-      for (int k = 0; k < size + integrity_size - sdap_header_size - 3; ++k) {
-        LOG_W(PDCP, "%02x ", ((unsigned char *)buffer)[header_size + sdap_header_size + k]);
-      }
-      LOG_W(PDCP, "\n");
+      // Plaintext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Receiver side after deciphering) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size - 3; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buffer)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
+      } 
     }
+    else if (shuffle_enable == 1){
+
+      //JOON: this is the shuffled ciphertext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Receiver side before deciphering - Shuffled Ciphertext) %s():\n", __func__);
+        for (int i = 0; i < size - header_size - sdap_header_size; ++i) {
+          LOG_W(PDCP, "%02x ", buffer[header_size + sdap_header_size + i]);
+        }
+        LOG_W(PDCP, "\n");
+      }  
+
+      //checksum starts from 26th byte, payload extends to the end
+      // not sure why data length extends 3 more bytes in this function
+      uint8_t data_length = size + integrity_size - sdap_header_size - 26 - 3;
+
+      LOG_W(PDCP, "(Recv) data_length: %d, size: %d, integrity_size: %d, sdap_header_size: %d\n\n", data_length, size, integrity_size, sdap_header_size);
+
+      //copy the checksum and payload part of the shuffled ciphertext
+      unsigned char *shuffled_ctx_data = malloc(sizeof(char) * data_length); 
+      memcpy(shuffled_ctx_data, &buffer[header_size + sdap_header_size + 26], data_length);
+
+      entity->cipher(entity->security_context,
+                    buffer + header_size + sdap_header_size,
+                    size - (header_size + sdap_header_size),
+                    entity->rb_id, rcvd_count, entity->is_gnb ? 0 : 1);
+
+
+      //JOON: this is the shuffled plaintext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Receiver side after deciphering - Shuffled Plaintext) %s():\n", __func__);
+        for (int i = 0; i < size - header_size - sdap_header_size; ++i) {
+          LOG_W(PDCP, "%02x ", buffer[header_size + sdap_header_size + i]);
+        }
+        LOG_W(PDCP, "\n");
+
+
+        //copy the checksum and payload part of the shuffled plaintext
+        unsigned char *shuffled_ptx_data = malloc(sizeof(char) * data_length);
+        memcpy(shuffled_ptx_data, &buffer[header_size + sdap_header_size + 26], data_length);
+
+        //extract the keystream by XORing shuffled ptx and ctx (might not work??)
+        unsigned char *keystream = malloc(sizeof(char) * data_length);
+        for (int i = 0; i < data_length; i++) {
+          keystream[i] = shuffled_ptx_data[i] ^ shuffled_ctx_data[i];
+        }
+      
+        LOG_W(PDCP, "(data part of keystream) %s():\n", __func__);
+        for (int k = 0; k < data_length; ++k) {
+          LOG_W(PDCP, "%02x ", keystream[k]);
+        }
+        LOG_W(PDCP, "\n");
+
+
+        //unshuffle ctx based on the keystream
+        unsigned char *temp = malloc(sizeof(char) * data_length);
+        prp_invert_permute_bits(shuffled_ctx_data, temp, data_length * 8, keystream, data_length);
+
+        LOG_W(PDCP, "Unshuffled Ciphertext (checksum and data payload) %s():\n", __func__);
+        for (int k = 0; k < data_length; ++k) {
+          LOG_W(PDCP, "%02x ", temp[k]);
+        }
+        LOG_W(PDCP, "\n");
+
+        //reinitialize buffer with the unshuffled ciphertext 
+        memcpy(&buffer[header_size + sdap_header_size + 26], temp, data_length);
+
+        LOG_W(PDCP, "Unshuffled Ciphertext (all) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size - 3; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buffer)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
+
+        //copy the deciphered header
+        unsigned char *deciphered_header = malloc(sizeof(char) * 26); 
+        memcpy(deciphered_header, &buffer[header_size + sdap_header_size], 26);
+
+        //decipher the true ctx
+        entity->cipher(entity->security_context,
+                      buffer + header_size + sdap_header_size,
+                      size - (header_size + sdap_header_size),
+                      entity->rb_id, rcvd_count, entity->is_gnb ? 0 : 1);
+
+        memcpy(&buffer[header_size + sdap_header_size], deciphered_header, 26);
+
+        LOG_W(PDCP, "Unshuffled Plaintext (all) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size - 3; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buffer)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
+      }
+
+    }
+    else {
+      LOG_W(PDCP, "Error Value of shuffle_enable \n");
+    }
+
+    /* DeShuffling is added here: End */   
   }
 
   if (entity->has_integrity) {
@@ -464,96 +504,131 @@ static int nr_pdcp_entity_process_sdu(nr_pdcp_entity_t *entity,
 
   if (entity->has_ciphering) {
 
-    //JOON: this is the plaintext
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(Sender side before ciphering) %s():\n", __func__);
-      for (int i = 0; i < size + integrity_size - sdap_header_size; ++i) {
-        LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + i]);
+    /* Shuffling is added here: Start */    
+
+    if (shuffle_enable == 0){
+
+      //JOON: this is the plaintext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Sender side before ciphering) %s():\n", __func__);
+        for (int i = 0; i < size + integrity_size - sdap_header_size; ++i) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + i]);
+        }
+        LOG_W(PDCP, "\n");
       }
-      LOG_W(PDCP, "\n");
-    }
 
-    //checksum starts from 26th byte, payload extends to the end
-    uint8_t data_length = size + integrity_size - sdap_header_size - 26;
-
-    LOG_W(PDCP, "(Process) data_length: %d, size: %d, integrity_size: %d, sdap_header_size: %d\n\n", data_length, size, integrity_size, sdap_header_size);
-
-    //copy the checksum and payload part of the plaintext
-    unsigned char *ptx_data = malloc(sizeof(char) * data_length);
-    memcpy(ptx_data, &buf[header_size + sdap_header_size + 26], data_length);
-    
-    // if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-    //   LOG_W(PDCP, "(ptx) %s():\n", __func__);
-    //   for (int k = 0; k < data_length; ++k) {
-    //     LOG_W(PDCP, "%02x ", ptx_data[k]);
-    //   }
-    //   LOG_W(PDCP, "\n");
-    // }
-
-    entity->cipher(entity->security_context,
+      // Ciphering
+      entity->cipher(entity->security_context,
                    (unsigned char *)buf + header_size + sdap_header_size,
                    size + integrity_size - sdap_header_size,
                    entity->rb_id, count, entity->is_gnb ? 1 : 0);
-  
-    //JOON: this is the ciphertext
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(Sender side after ciphering) %s():\n", __func__);
-      for (int k = 0; k < size + integrity_size - sdap_header_size; ++k) {
-        LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + k]);
+
+      //JOON: this is the ciphertext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Sender side after ciphering) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
       }
-      LOG_W(PDCP, "\n");
+
     }
+    else if (shuffle_enable == 1){
 
-    //copy the checksum and payload part of the ciphertext
-    unsigned char *ctx_data = malloc(sizeof(char) * data_length);
-    memcpy(ctx_data, &buf[header_size + sdap_header_size + 26], data_length);
-  
-    // if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-    //   LOG_W(PDCP, "(ctx) %s():\n", __func__);
-    //   for (int k = 0; k < data_length; ++k) {
-    //     LOG_W(PDCP, "%02x ", ctx_data[k]);
-    //   }
-    //   LOG_W(PDCP, "\n");
-    // }
-
-
-    //extract the keystream by XORing ptx and ctx
-    unsigned char *keystream = malloc(sizeof(char) * data_length);
-    for (int i = 0; i < data_length; i++) {
-      keystream[i] = ptx_data[i] ^ ctx_data[i];
-    }
-    
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(data part of keystream) %s():\n", __func__);
-      for (int k = 0; k < data_length; ++k) {
-        LOG_W(PDCP, "%02x ", keystream[k]);
+      //JOON: this is the plaintext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Sender side before ciphering) %s():\n", __func__);
+        for (int i = 0; i < size + integrity_size - sdap_header_size; ++i) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + i]);
+        }
+        LOG_W(PDCP, "\n");
       }
-      LOG_W(PDCP, "\n");
-    }
 
-    //shuffle ctx based on the keystream
-    unsigned char *temp = malloc(sizeof(char) * data_length);
-    prp_permute_bits(&buf[header_size + sdap_header_size + 26], temp, data_length * 8, keystream, data_length);
-    
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(temp) %s():\n", __func__);
-      for (int k = 0; k < data_length; ++k) {
-        LOG_W(PDCP, "%02x ", temp[k]);
-      }
-      LOG_W(PDCP, "\n");
-    }
+      //checksum starts from 26th byte, payload extends to the end
+      uint8_t data_length = size + integrity_size - sdap_header_size - 26;
 
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      memcpy(&buf[header_size + sdap_header_size + 26], temp, data_length);
-    }
+      LOG_W(PDCP, "(Process) data_length: %d, size: %d, integrity_size: %d, sdap_header_size: %d\n\n", data_length, size, integrity_size, sdap_header_size);
+
+      //copy the checksum and payload part of the plaintext
+      unsigned char *ptx_data = malloc(sizeof(char) * data_length);
+      memcpy(ptx_data, &buf[header_size + sdap_header_size + 26], data_length);
       
-    if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
-      LOG_W(PDCP, "(Sender side after permutation) %s():\n", __func__);
-      for (int k = 0; k < size + integrity_size - sdap_header_size; ++k) {
-        LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + k]);
+      // if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+      //   LOG_W(PDCP, "(ptx) %s():\n", __func__);
+      //   for (int k = 0; k < data_length; ++k) {
+      //     LOG_W(PDCP, "%02x ", ptx_data[k]);
+      //   }
+      //   LOG_W(PDCP, "\n");
+      // }
+
+      entity->cipher(entity->security_context,
+                    (unsigned char *)buf + header_size + sdap_header_size,
+                    size + integrity_size - sdap_header_size,
+                    entity->rb_id, count, entity->is_gnb ? 1 : 0);
+    
+      //JOON: this is the ciphertext
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(Sender side after ciphering) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
       }
-      LOG_W(PDCP, "\n");
+
+      //copy the checksum and payload part of the ciphertext
+      unsigned char *ctx_data = malloc(sizeof(char) * data_length);
+      memcpy(ctx_data, &buf[header_size + sdap_header_size + 26], data_length);
+    
+      // if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+      //   LOG_W(PDCP, "(ctx) %s():\n", __func__);
+      //   for (int k = 0; k < data_length; ++k) {
+      //     LOG_W(PDCP, "%02x ", ctx_data[k]);
+      //   }
+      //   LOG_W(PDCP, "\n");
+      // }
+
+
+      //extract the keystream by XORing ptx and ctx
+      unsigned char *keystream = malloc(sizeof(char) * data_length);
+      for (int i = 0; i < data_length; i++) {
+        keystream[i] = ptx_data[i] ^ ctx_data[i];
+      }
+      
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "(data part of keystream) %s():\n", __func__);
+        for (int k = 0; k < data_length; ++k) {
+          LOG_W(PDCP, "%02x ", keystream[k]);
+        }
+        LOG_W(PDCP, "\n");
+      }
+
+      //shuffle ctx based on the keystream
+      unsigned char *temp = malloc(sizeof(char) * data_length);
+      prp_permute_bits(&buf[header_size + sdap_header_size + 26], temp, data_length * 8, keystream, data_length);
+      
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "Shuffled Ciphertext (Only checksum and data payload) %s():\n", __func__);
+        for (int k = 0; k < data_length; ++k) {
+          LOG_W(PDCP, "%02x ", temp[k]);
+        }
+        LOG_W(PDCP, "\n");
+      }
+
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        memcpy(&buf[header_size + sdap_header_size + 26], temp, data_length);
+      }
+        
+      if (entity->type == NR_PDCP_DRB_AM || entity->type == NR_PDCP_DRB_UM){
+        LOG_W(PDCP, "Shuffled Ciphertext (all) %s():\n", __func__);
+        for (int k = 0; k < size + integrity_size - sdap_header_size; ++k) {
+          LOG_W(PDCP, "%02x ", ((unsigned char *)buf)[header_size + sdap_header_size + k]);
+        }
+        LOG_W(PDCP, "\n");
+      }
     }
+
+    /* Shuffling is added here: End */  
+
   }
 
   entity->tx_next++;

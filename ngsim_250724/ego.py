@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # Get the local IP address for binding
     host = '0.0.0.0'  # Listen on all available interfaces
-    port = 65432      # Port to listen on
+    port = 65432     # Port to listen on
 
     server_socket.bind((host, port))
     print(f"EGO listening on {host}:{port}")
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
             received_data = struct.unpack('!4f', data)  
             prec_counter = received_data[0]
-            print("Recived data:", received_data)
+            print("Received data:", received_data)
 
             ack = b'\x01'
             server_socket.sendto(ack, addr)
@@ -65,4 +65,4 @@ if __name__ == '__main__':
     server_socket.close()
     print("Connection ended.")
 
-    print(f"Connection Success Rate: {success_counter} / {DATA_LENGTH} = {success_counter/DATA_LENGTH}")
+    print(f"Connection Success Rate: {success_counter-1} / {DATA_LENGTH} = {(success_counter-1)/DATA_LENGTH}")

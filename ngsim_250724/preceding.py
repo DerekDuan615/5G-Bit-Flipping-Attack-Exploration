@@ -4,12 +4,13 @@ import numpy as np
 import pandas as pd
 
 data_length = 500
-VEHICLE_ID = 4
+VEHICLE_ID = 3
 
 
 if __name__ == '__main__':
     # define the path to the collected data
-    file_path = f"/home/derek/VSC_Python/data/ngsim/vehicle_{VEHICLE_ID}.csv"
+    # file_path = f"/home/derek/VSC_Python/data/ngsim/vehicle_{VEHICLE_ID}.csv"
+    file_path = f"../data/ngsim/vehicle_{VEHICLE_ID}.csv"
 
     ### Get Dataframe of the leader from the data collected from RDS 1000 ###
     prec_traj_df = pd.read_csv(file_path)    
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.settimeout(0.12)
 
-    specific_address = ('10.0.0.2', 44495)
+    specific_address = ('10.0.0.3', 44495)
     ego_address = ('192.168.70.135', 65432)
 
     client_socket.bind(specific_address)

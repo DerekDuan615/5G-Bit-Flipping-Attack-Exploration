@@ -675,8 +675,21 @@ static void deliver_sdu_drb(void *_ue, nr_pdcp_entity_t *entity,
   }
 }
 
-// enable this when attacking
+/* Bit-Flipping attack Enable (1) / Disable (0) */
+static int attack_enable = 1;
+
+/* Bit-Flipping attack start counter */
 static int counter = 0;
+static int counter_threshold = -1;
+
+// add the option --attack-counter (e.g. sudo ./nr-uesoftmodem ... --attack-counter=10 )
+// void parse_opt_counter(int argc, char **argv) {
+//     for (int i = 1; i < argc; ++i) {
+//         if (strncmp(argv[i], "--attack-counter=", 17) == 0) {
+//             counter_threshold = atoi(argv[i]+17);
+//         }
+//     }
+// }
 
 static void deliver_pdu_drb_ue(void *deliver_pdu_data, ue_id_t ue_id, int rb_id,
                                char *buf, int size, int sdu_id)
@@ -685,27 +698,37 @@ static void deliver_pdu_drb_ue(void *deliver_pdu_data, ue_id_t ue_id, int rb_id,
   protocol_ctxt_t ctxt = { .enb_flag = 0, .rntiMaybeUEid = ue_id };
 
   //JOON: Print the buffer content as hexadecimal (before attack)
-  // LOG_W(PDCP, "(Before Attack) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
-  // for (int i = 0; i < size; ++i) {
-  //   LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
-  // }
-  // LOG_W(PDCP, "\n");
+  LOG_W(PDCP, "(Before Attack) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
+  for (int i = 0; i < size; ++i) {
+    LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
+  }
+  LOG_W(PDCP, "\n");
 
   // ***ATTACK STARTS***
+  // This function receives PDCP PDU, which has 29 bytes before the checksum (from byte 0 to byte 28).
+  // So the checksum starts at byte 29.
+  
+  if (attack_enable == 1 && counter > counter_threshold) {
 
-  // this only works the first time gNB is launched!
-  if (counter > -1) {
-    // //JOON: Flip the last bit in the checksum (31th)
-    // buf[30] ^= 1;
+    // Test for Experiment 1.3: Checksum Bit-Flipping Attack
+    // buf[30] ^= (1 << 7);   // mutate checksum
+    // buf[40] ^= (1 << 7);   // mutate acc value
 
-    // //JOON: Flip the last bit of the second byte of the acceleration float (36th)
-    // buf[36] ^= 1;
+    // Test for Experiment 1.4: Payload Bit-Flipping Attack
+    // buf[32] ^= (1 << 4);   // mutate position
+    // buf[36] ^= (1 << 4);   // mutate velocity
 
+    // Test for Experiment 2.2 and 2.3: Checksum Bit-Flipping Attack for NGSIM trajectory
+    buf[30] ^= (1 << 7);   // mutate checksum
+    buf[44] ^= (1 << 7);   // mutate acc value
+
+    /* All Attacks */
+    
     // ACCELERATION ATTACK
 
     //JOON: Sign flip attack (first bit of the checksum and acceleration float)
-    buf[29] ^= (1 << 7);
-    buf[35] ^= (1 << 7);
+    // buf[29] ^= (1 << 7);
+    // buf[35] ^= (1 << 7);
 
     // // JOON: Exponent flip attack 
     // // second bit (MSB of exp) can give NaN values
@@ -834,18 +857,21 @@ static void deliver_pdu_drb_ue(void *deliver_pdu_data, ue_id_t ue_id, int rb_id,
     // //JOON: Mantissa flip attack (further attacks)
     // buf[37+4] ^= (1 << 4);
     // buf[37+8] ^= (1 << 4);
+
+    /* All Attacks */
+
   }
 
   counter++;
 
   // ***ATTACK ENDS***
 
-  //JOON: Print the buffer content as hexadecimal (after attack)
-  // LOG_W(PDCP, "(After Attack) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
-  // for (int i = 0; i < size; ++i) {
-  //   LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
-  // }
-  // LOG_W(PDCP, "\n");
+  // JOON: Print the buffer content as hexadecimal (after attack)
+  LOG_W(PDCP, "(After Attack) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
+  for (int i = 0; i < size; ++i) {
+    LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
+  }
+  LOG_W(PDCP, "\n");
   
   
   uint8_t *memblock = malloc16(size);
