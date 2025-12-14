@@ -1,6 +1,6 @@
 # Introduction #
 
-This branch documents the experimental work associated with the research presented in the paper "Bit-Flipping Attack Exploration and Countermeasure in 5G Networks", which is accepted for publication at the REUNS Workshop, IEEE MASS 2025 
+This branch documents the experimental work associated with the research presented in the paper "Bit-Flipping Attack Exploration and Countermeasure in 5G Networks", which is published at the REUNS Workshop co-located with IEEE MASS 2025. 
 
 # Background #
 
@@ -20,7 +20,7 @@ Refernce Tutorials:
 
 # Main Modifications #
  *  The bit-flipping attack is implemented in the `deliver_pdu_drb_ue()` function within `openair2/LAYER2/nr_pdcp/nr_pdcp_oai_api.c`.
- *  The keystream-based shuffling defense is implemented in the `nr_pdcp_entity_process_sdu()` and `nr_pdcp_entity_recv_pdu()` functions within `openair2/LAYER2/nr_pdcp/nr_pdcp_entity.c`, along with all related functions (`prng_seed()`, `prng_next()`, `prp_permute_bits()`, `prp_invert_permute_bits()`) added to the same module.
+ *  The keystream-based shuffling defense is implemented in the `nr_pdcp_entity_process_sdu()` and `nr_pdcp_entity_recv_pdu()` functions within `openair2/LAYER2/nr_pdcp/nr_pdcp_entity.c`, along with all related helper functions (`prng_seed()`, `prng_next()`, `prp_permute_bits()`, `prp_invert_permute_bits()`) added at the beginning of the same module.
  *  The "data" directory contains data retrieved from the [NGSIM](https://data.transportation.gov/stories/s/Next-Generation-Simulation-NGSIM-Open-Data/i5zb-xe34/#trajectory-data) dataset.
  *  The "cacc-venv" directory stores the virtual environment created for the experiments.
  *  The "ngsim_250724" directory includes the Python modules that represent the applications running on 5G.
@@ -37,8 +37,8 @@ In this experiment, Vehicle A transmits its current state (position: 300.0, velo
 Check the variable `attack_enable` in `nr_pdcp_oai_api.c` and `shuffle_enable` in `nr_pdcp_entity.c` before each experiment:
   * Experiment 1.1: set both `attack_enable` and `shuffle_enable` to zero.
   * Experiment 1.2: set `attack_enable` to zero, and `shuffle_enable` to one.
-  * Experiment 1.3: set `attack_enable` to one, and `shuffle_enable` to zero. Uncomment the code for the checksum bit-flipping attack under "Test for Experiment 1.3" in `nr_pdcp_oai_api.c`.
-  * Experiment 1.4: set `attack_enable` to one, and `shuffle_enable` to zero. Uncomment the code for the payload bit-flipping attack under  "Test for Experiment 1.4" in `nr_pdcp_oai_api.c`.
+  * Experiment 1.3: set `attack_enable` to one, and `shuffle_enable` to zero. Only uncomment the code for the checksum bit-flipping attack under "Test for Experiment 1.3" in the `deliver_pdu_drb_ue()` function in `nr_pdcp_oai_api.c`.
+  * Experiment 1.4: set `attack_enable` to one, and `shuffle_enable` to zero. Only uncomment the code for the payload bit-flipping attack under  "Test for Experiment 1.4" in the `deliver_pdu_drb_ue()` function in `nr_pdcp_oai_api.c`.
 
 Then, recompile the RAN network through the following commands:
 <pre>
@@ -84,8 +84,8 @@ In this experiment, Vehicle A shares its trajectory with Vehicle B while traveli
 
 Check the variable `attack_enable` in `nr_pdcp_oai_api.c` and `shuffle_enable` in `nr_pdcp_entity.c` before each experiment:
   * Experiment 2.1: set both `attack_enable` and `shuffle_enable` to zero.
-  * Experiment 2.2: set `attack_enable` to one, and `shuffle_enable` to zero. Uncomment the code under "Test for Experiment 2.2 and 2.3" in `nr_pdcp_oai_api.c`. 
-  * Experiment 2.3: set both `attack_enable` and `shuffle_enable` to one. Uncomment the code under "Test for Experiment 2.2 and 2.3" in `nr_pdcp_oai_api.c`. 
+  * Experiment 2.2: set `attack_enable` to one, and `shuffle_enable` to zero. Only uncomment the code under "Test for Experiment 2.2 and 2.3" in the `deliver_pdu_drb_ue()` function in `nr_pdcp_oai_api.c`. 
+  * Experiment 2.3: set both `attack_enable` and `shuffle_enable` to one. Only uncomment the code under "Test for Experiment 2.2 and 2.3" in the `deliver_pdu_drb_ue()` function in `nr_pdcp_oai_api.c`. 
 
 Then, recompile the RAN network through the following commands:
 <pre>
@@ -136,9 +136,22 @@ This figure displays the results of the same bit-flipping attack as in Experimen
 ![pdcppdu](images/pdcpPDU.PNG)
 
 2. Fig. 6 and 7 in our paper are adapted from Experiment 1.3 and 1.4. 
-3. The results presented in Tables I and III are derived from Experiment 2.2, using various vehicle trajectories and different flipped bits.  
-4. Table II reports results from Experiment 2.3, also varying vehicle trajectories and the flipped bits.
+3. The results presented in Tables I and III in our paper are derived from Experiment 2.2, using various vehicle trajectories and different flipped bits.  
+4. Table II in our paper reports results from Experiment 2.3, also varying vehicle trajectories and the flipped bits.
 
 # Citation #
 
-The citation of the paper will be added after it is published.
+If you use this code or experimental results in your research, please cite our paper as follows:
+<pre>
+@INPROCEEDINGS{11206202,
+  author={Kim, Joon and Duan, Chengwei and Ray, Sandip},
+  booktitle={2025 IEEE 22nd International Conference on Mobile Ad-Hoc and Smart Systems (MASS)}, 
+  title={Bit-Flipping Attack Exploration and Countermeasure in 5G Network}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={640-645},
+  keywords={Costs;5G mobile communication;Semantics;Redundancy;Telecommunication traffic;Receivers;Smart systems;Encryption;Low latency communication;Payloads},
+  doi={10.1109/MASS66014.2025.00104}}
+</pre>
+Thank you for citing our work!
