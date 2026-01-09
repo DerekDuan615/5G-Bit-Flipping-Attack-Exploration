@@ -8,7 +8,7 @@ This research was conducted on the 5G platform provided by [OpenAirInterface](ht
 
 All experiments in this branch were carried out on a single machine using RFSIM.
 
-Refernce Tutorials:
+Reference Tutorials:
  *  [NR_SA_Tutorial_OAI_CN5G](https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/develop/doc/NR_SA_Tutorial_OAI_CN5G.md)
  *  [NR_SA_Tutorial_OAI_nrUE](https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/develop/doc/NR_SA_Tutorial_OAI_nrUE.md)
 
