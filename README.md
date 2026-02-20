@@ -143,15 +143,13 @@ This figure displays the results of the same bit-flipping attack as in Experimen
 
 If you use this code or experimental results in your research, please cite our paper as follows:
 <pre>
-@INPROCEEDINGS{11206202,
+@inproceedings{kim2025bit,
+  title={Bit-Flipping Attack Exploration and Countermeasure in 5G Network},
   author={Kim, Joon and Duan, Chengwei and Ray, Sandip},
-  booktitle={2025 IEEE 22nd International Conference on Mobile Ad-Hoc and Smart Systems (MASS)}, 
-  title={Bit-Flipping Attack Exploration and Countermeasure in 5G Network}, 
+  booktitle={2025 IEEE 22nd International Conference on Mobile Ad-Hoc and Smart Systems (MASS)},
+  pages={640--645},
   year={2025},
-  volume={},
-  number={},
-  pages={640-645},
-  keywords={Costs;5G mobile communication;Semantics;Redundancy;Telecommunication traffic;Receivers;Smart systems;Encryption;Low latency communication;Payloads},
-  doi={10.1109/MASS66014.2025.00104}}
+  organization={IEEE}
+}
 </pre>
 Thank you for citing our work!
