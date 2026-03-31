@@ -1,0 +1,5 @@
+1. Attack Only.
+2.  buf[29] ^= (1 << 5);   // mutate checksum
+    buf[31] ^= (1 << 5);   // mutate acc value
+3. Keep using the latest received value to calculate current ego CAV's behavior.
+

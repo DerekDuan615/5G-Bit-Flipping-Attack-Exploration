@@ -25,6 +25,9 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 
+#include <stdio.h> // added for the printf()
+#include "common/utils/LOG/log.h" // include this header to make LOG_W() work
+
 typedef struct {
   /* _s is twice as big as defined in the specs to avoid moving memory,
    * we only change the pointer 's', see lfsr_keystream()
@@ -616,10 +619,23 @@ void snow3g_ciphering(uint32_t count, int bearer, int direction, const uint8_t *
   int keystream_count = ((unsigned)length + 3) / 4;
   uint32_t _keystream[keystream_count];
 
-  for (int i = 0; i < keystream_count; i++)
+  for (int i = 0; i < keystream_count; i++) {
     _keystream[i] = htonl(generate_keystream_step(&s));
+  }
+  
+  uint8_t *keystream = (uint8_t *) _keystream;
 
-  uint8_t *keystream = (uint8_t *)_keystream;
+  //JOON: Print the buffer content as hexadecimal
+  LOG_W(PDCP, "%s(): Keystream (hex), Count: %u, Bearer: %d, Direction UL0 DL1: %d\n", __func__, count, bearer, direction);
+  for (int i = 0; i < length; ++i) {
+    LOG_W(PDCP, "%02x ", (uint8_t)keystream[i]);
+  }
+  LOG_W(PDCP, "\n");
+
+  // for (int i = 0; i < keystream_count; i++)
+  //   _keystream[i] = htonl(generate_keystream_step(&s));
+
+  // uint8_t *keystream = (uint8_t *)_keystream;
   for (int i = 0; i < length; i++)
     out[i] = in[i] ^ keystream[i];
 }

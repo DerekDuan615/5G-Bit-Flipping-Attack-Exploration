@@ -1,0 +1,3 @@
+1. Keystream-based shuffle enable
+2. 1st received message not benign.
+3. The heap corruption still exist. The mitigation looks generally good. But we still have to shrunken the miti_list and add 2-bit flip checksum.

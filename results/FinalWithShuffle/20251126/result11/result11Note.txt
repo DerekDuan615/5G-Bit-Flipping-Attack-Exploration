@@ -1,0 +1,4 @@
+1. Keystream-based shuffle enable
+2. 1st received message not benign.
+3. The mitigation looks generally good. But we still have to shrunken the miti_list and add 2-bit flip checksum.
+4. Send 500 message. Heap corruption does not happen at least for this experiment.

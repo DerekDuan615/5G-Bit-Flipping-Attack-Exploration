@@ -1,0 +1,16 @@
+1. We transmit 40 messages.
+2. For some cases we cannot correct it perfectly (e.g. benign is 1.5/22.93/0.4, miti is 1.3/22.93/0.4)
+   we can accept it because the error of correlation checking is the same, and we choose the one with lower acc.
+   
+3. For row 23, the benign is 1.5/23.46/8.5, but miti is -24.1/23.46/8.5. The result does not make sense because the limit of acc follows the quantized integer rule is [-16,15.9], so -24.1 does not make sense. And the correct recovery is contained inside miti_list.
+Let's check:
+
+
+4. For row 28, the benign is 1.5/23.59/10.5, but miti is 7.9/23.59/10.5. The correct recovery is NOT contained inside miti_list!!!
+Let's check:
+(1) Seems that the right flip is [0,15,1,6], which flips the highest bit of acc. If we don't flip it, but flip [3,15,1,6] as a checksum bit-flipping attack, the acc goes to -24.1.
+
+(1) After checking miti_list_2D for row 28, we can see that the network layer does not give the right recovery to the app layer.
+(2) We can see that the received states are the same as the benign states! Which means that because of shuffle, the 2 bits finally both flip the checksum field, but our network-layer detection does not consider this!!!
+
+

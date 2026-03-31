@@ -1,0 +1,3 @@
+1. No keystream-based shuffle
+2. 1st received message not benign.
+3. The simulation result shows sth. wrong on the network layer, and it stops at the 2nd message. This result only want to show that the application layer code works. Error occurs when we enable the keystream-based shuffle.

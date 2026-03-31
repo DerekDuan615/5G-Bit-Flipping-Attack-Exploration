@@ -1,0 +1,7 @@
+1. result 5 is the final version till 11/26/2025
+2. For network layer, we missed to add the identification when both 2 bits flip the checksum field.
+3. Definitely, the heap corruption problem is not solved for now.
+4. For the application layer, we assume the 1st message following CAV receives is benign. 
+5. Now mitigation is still not perfect (like row 31 in true_ego_traj_file.csv). The mitigated acc is large. It means that we still need to find the way to shrunk the miti_list. 
+
+However, we are going to check the case that 1st message is not benign first, and then update the mitigation logic.

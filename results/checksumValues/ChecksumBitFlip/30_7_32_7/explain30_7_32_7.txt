@@ -1,0 +1,10 @@
+We can see from the final XOR value, there are only three patterns:
+(1) All 0s, which means attacked is not detected. 
+    Since we flip the same index of bits on checksum and payload, and there is no keystream-based shuffle here, around 50% of message can bypass the detection.
+(2) One contiguous block of 1s (multiple different length), but the lsb of 1 is always at the 9th least bit (index 8).
+    This makes sense, because when we flip the 8th least bit (index 7) in the payload, we should have a contiguous block of 1s which starts at the 8th least bit (index 7)
+    However, since we also flip the 8th least bit (index 7) of the checksum, it make the final contiguous block of 1s starts at the 9th least bit (index 8)
+(3) Two contiguous blocks of 1s. Only 2 XOR values has this pattern out of 1000, which are '1111111100000001' and '1111111000111111'
+    The lsb of 1 of the first block is always at the 9th least bit (index 8)
+    We have the same conclusion that both the the 8th least bit (index 7) of payload and checksum is attacked, just overlook the second 1s block for now.
+    If we see another case which has the same effect then we can discuss then.

@@ -1,0 +1,6 @@
+1. Keystream-based shuffle enable
+2. 1st received message not benign.
+3. Send 200 message. Heap corruption happens!
+4. Add considering both bits flip in the checksum field at network layer.
+5. Add confidence mechanism. A little bit better than result 13 which didn't add. Need to debug deeper.
+6. Add the column of confidence

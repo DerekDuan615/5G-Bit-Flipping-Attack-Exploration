@@ -1,0 +1,41 @@
+1. Keystream-based shuffle enable
+2. 1st received message not benign.
+3. Send 200 message. Heap corruption happens!
+4. Add considering both bits flip in the checksum field at network layer.
+5. Add confidence mechanism. A little bit better than result 13 which didn't add. Need to debug deeper.
+6. Add the column of confidence
+7. Add duplicate removal logic (e.g. if 2 bits flip both in checksum or 1 in checksum 1 in counter, the acc/vel/pos are the same, we should keep only one)
+
+After comparing the benign and mitigated preceding CAV trajectories, the result shows that acc has 37 differences, which makes sense because consistency check cannot check acc, and I am too conservative that always keep the min acc. If I set that I will choose the acc which is closest to the acc at previous time step, then the number of difference will go down.
+
+There are 5 differences in velocity and 7 differences in position, which also makes sense because keystream-based shuffle have about 97% detection rate, which means for 200 messages, around 6 messages we cannot detect, so it make sense if they cause differences.
+
+We will check all 12 differences for the reason.
+
+1. Row 12, benign (1.5, 23.16, 3.8), miti (0.7, 23.16, 3.9). Same as row 11
+
+2. Row 67, benign (1.4, 24.55, 27.7), miti (1.4, 24.54, 27.7).
+
+3. Row 101, benign (1, 25.29, 41.8), miti (0.9, 24.3, 42.3).
+   (1) Because for this message, we did not detect the attack, returned flip bit pair is [0,0,0,0]
+
+4. Row 115, benign (0.7, 25.57, 50.3), miti (2.1, 25.57, 50.1). The prev result is correct (0.7, 25.54, 49.5).
+    For the error of consistency checking, the pos 50.1 gives lower error than pos 50.3, and the min acc for the (25.57, 50.1) is 2.1. Then there is no way.
+    The main reason why it mitigates the wrong value is:
+    (1) The benign acc/vel/pos does not always strictly follow the consistency check because all of the values comes from sensors, and sensors are not perfect.
+    (2) The bit flips the lower bits of position, which changes benign 50.3 to 50.1, which accidentally meets the lower error.
+    
+5. Row 116, benign (0.7, 25.58, 50.7), miti (0.3, 25.59, 50.7). 
+   (1) The bit flip index lies on the lower bits of velocity field.
+   (2) The error in last step affects, too.
+   
+6. Row 130, benign (0.4, 25.75, 58.4), miti (0.4, 25.74, 58.4). Same as (1) in Row 116.
+
+7. Row 158, benign (0.4, 25.97, 72.7), miti (3.6, 25.97, 72.3). Same as Row 115
+
+8. Row 167, benign (0.3, 26.03, 77), miti (0.3, 26.03, 77.8). The previous states are correct, the error the miti one is smaller than the error of benign.
+
+9. Row 185, benign (0.5, 26.18, 87.4), miti (2.1, 26.18, 87.8). The previous states are correct. Same as row 115.
+
+
+     
