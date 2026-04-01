@@ -1,6 +1,6 @@
 # Introduction #
 
-This branch documents the experimental work associated with the research presented in the paper "[Bit-Flipping Attack Exploration and Countermeasure in 5G Networks](https://ieeexplore.ieee.org/abstract/document/11206202)", which is published at the REUNS Workshop co-located with IEEE MASS 2025. 
+This branch documents the experimental work associated with the research presented in the paper "[Bit-Flipping Attack Exploration and Countermeasure in 5G Networks](https://ieeexplore.ieee.org/abstract/document/11206202)", which is published at the [REUNS Workshop](https://sites.google.com/view/reuns2025/home) co-located with [IEEE MASS 2025](https://ieeemass2025.github.io/ieeemass2025/index.html). 
 
 # Background #
 
