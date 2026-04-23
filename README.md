@@ -162,7 +162,9 @@ The plots and the trajectory CSV file is stored in `~/openairinterface5gTwoBitRe
 
 ## Attack ##
 
-To perform a bit-flipping attack, first configure the specific target bits and data bytes we want to flip in `openair2/LAYER2/nr_pdcp/nr_pdcp_oai_api.c`. Set the `attack_enable` to 1, then rebuild both the OAI gNB and nrUE to apply the changes. Next, in `~/openairinterface5gTwoBitRecover/application/ego_CAM.py`, initialize the `counter` variable to 0. Once these steps are complete, run the simulation as described above.
+To perform a bit-flipping attack, first configure the specific target bits and data bytes we want to flip in `openair2/LAYER2/nr_pdcp/nr_pdcp_oai_api.c`. Set the `attack_enable` to 1, then rebuild both the OAI gNB and nrUE to apply the changes. Next, in `~/openairinterface5gTwoBitRecover/application/ego_CAM.py`, initialize the `counter` variable to 0. Once these steps are complete, run the simulation from step 1 to 8 as described for the benign case.
+
+*Note: If you have just simulated the benign case and don't want to start over, you can simply run "docker cp ~/openairinterface5gTwoBitRecover/application/ego_CAM.py oai-ext-dn:/tmp" to upload the updated ego_CAM.py, and then do the attack simulation.*
 
 To ensure synchronized communication during the experiment, start `python3 ego_CAM.py` in terminal 5 and then immediately run `python3 preceding_CAM.py` in terminal 6, preferably within the following CAV's timeout window, which is 0.3 second for now. This is important because the bit-flipping attack affects the very first message from the preceding CAV, which may cause the following CAV to miss it. Prompt execution helps the receiver correctly identify the initial packet and prevents synchronization issues.
 

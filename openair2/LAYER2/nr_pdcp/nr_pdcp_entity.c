@@ -36,7 +36,7 @@
 /* --- 1. Helper Functions for the Keystream-based Shuffling - Start --- */
 
 // Enable or Disable Shuffling here: '0' means disable, '1' means enable
-static int shuffle_enable = 1; 
+static int shuffle_enable = 0; 
 
 // Simple deterministic PRNG using XORShift, seeded from keystream
 static uint32_t prng_state;
@@ -121,7 +121,7 @@ void prp_invert_permute_bits(const unsigned char *input, uint8_t *output, size_t
 /* --- 2. Helper Functions for the Flipped Bits Identification - Start --- */
 
 // Enable or Disable Flipped Bits Identification here: '0' means disable, '1' means enable
-static int bitflipIden_enable = 1;  
+static int bitflipIden_enable = 0;  
 
 // (2.1) Copy the checksum function in openairinterface5g/openair2/UTIL/OPT/probe.c
 // Need to change the name of the function, otherwise we will get an error of "multiple definition of `checksum'" when compilation

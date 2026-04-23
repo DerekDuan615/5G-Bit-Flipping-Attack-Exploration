@@ -363,7 +363,7 @@ if __name__ == '__main__':
     
     # initialize counter and error tracking
 
-    counter = 0  # Set to -1 for benign case, and 0 if the bit-flipping attack is enabled at network-level in OAI.
+    counter = -1  # Set to -1 for benign case, and 0 if the bit-flipping attack is enabled at network-level in OAI.
     
     prec_counter = 0
     error_indices = []

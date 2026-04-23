@@ -676,7 +676,7 @@ static void deliver_sdu_drb(void *_ue, nr_pdcp_entity_t *entity,
 }
 
 // enable this when attacking
-static int attack_enable = 1;
+static int attack_enable = 0;
 
 static void deliver_pdu_drb_ue(void *deliver_pdu_data, ue_id_t ue_id, int rb_id,
                                char *buf, int size, int sdu_id)
