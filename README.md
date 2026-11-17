@@ -1,6 +1,6 @@
 # Introduction #
 
-This branch documents the experimental work associated with the research presented in the paper "Network-Level Bit-Flipping Attacks on Cooperative Adaptive Cruise Control in 5G Environment", which has been accepted by [IEEE VTC Spring 2026](https://events.vtsociety.org/vtc2026-spring/) and will be published.
+This branch documents the experimental work associated with the research presented in the paper "[Network-Level Bit-Flipping Attacks on Cooperative Adaptive Cruise Control in 5G Environment](https://ieeexplore.ieee.org/document/11757380)", which has been published in [IEEE VTC Spring 2026](https://events.vtsociety.org/vtc2026-spring/).
 
 # Background #
 
@@ -320,4 +320,15 @@ When running the experiment with our defense, we sometimes encounter errors in t
 
 # Citation #
 
-The citation of the paper will be added after it is published.
+If you find this project helpful, or if you use its ideas, code, or methodology in your research, please kindly cite our work or acknowledge this repository appropriately.
+<pre>
+@inproceedings{duan2026network,
+  title={Network-Level Bit-Flipping Attacks on Cooperative Adaptive Cruise Control in 5G Environment},
+  author={Duan, Chengwei and Kim, Joon and Ray, Sandip},
+  booktitle={2026 IEEE 103rd Vehicular Technology Conference (VTC2026-Spring)},
+  pages={1--6},
+  year={2026},
+  organization={IEEE}
+}
+</pre>
+Thank you very much for your citation!
